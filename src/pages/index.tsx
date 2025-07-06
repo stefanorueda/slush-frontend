@@ -4,17 +4,7 @@ import { useReducer, useState } from 'react'
 import ParticipantRow from '@/components/ParticipantRow'
 import { validateSplitTotal } from '@/utils/validateSplit'
 import { Button } from '@/components/ui/button'
-
-interface Participant {
-  id: number
-  name: string
-  amount: number | ''
-}
-
-interface State {
-  total: number | ''
-  participants: Participant[]
-}
+import { Participant, State } from '@/types'
 
 const initialState: State = {
   total: '',
