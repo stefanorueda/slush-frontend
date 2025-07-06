@@ -1,5 +1,9 @@
 // File: src/components/ParticipantRow.tsx
 
+import { motion } from 'framer-motion'
+import { Button } from './ui/button'
+import { X } from 'lucide-react'
+
 interface Props {
     id: number
     name: string
@@ -10,27 +14,33 @@ interface Props {
   
   export default function ParticipantRow({ id, name, amount, onChange, onRemove }: Props) {
     return (
-      <div className="flex gap-2 mb-2 items-center">
-        <input
+      <div className="flex gap-2 mb-2 items-center group">
+        <motion.input
           type="text"
           placeholder="Name"
           value={name}
           onChange={(e) => onChange({ name: e.target.value })}
-          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-shadow"
+          whileFocus={{ scale: 1.01 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
         />
-        <input
+        <motion.input
           type="number"
           placeholder="Amount"
           value={amount}
           onChange={(e) => onChange({ amount: Number(e.target.value) })}
-          className="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-shadow"
+          whileFocus={{ scale: 1.01 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
         />
-        <button 
-          onClick={onRemove} 
-          className="text-blue-500 hover:text-blue-700 transition-colors text-sm"
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onRemove}
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          Remove
-        </button>
+          <X className="h-4 w-4" />
+        </Button>
       </div>
     )
   }
