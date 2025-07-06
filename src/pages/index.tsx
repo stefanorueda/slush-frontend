@@ -1,115 +1,127 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+// File: src/pages/index.tsx
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+import { useReducer, useState } from 'react'
+import ParticipantRow from '@/components/ParticipantRow'
+import { validateSplitTotal } from '@/utils/validateSplit'
+import { Button } from '@/components/ui/button'
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+interface Participant {
+  id: number
+  name: string
+  amount: number | ''
+}
 
-export default function Home() {
+interface State {
+  total: number | ''
+  participants: Participant[]
+}
+
+const initialState: State = {
+  total: '',
+  participants: [{ id: 1, name: '', amount: '' }],
+}
+
+function reducer(state: State, action: any): State {
+  switch (action.type) {
+    case 'SET_TOTAL':
+      return { ...state, total: action.payload }
+    case 'ADD_PARTICIPANT':
+      return {
+        ...state,
+        participants: [...state.participants, { id: Date.now(), name: '', amount: '' }],
+      }
+    case 'REMOVE_PARTICIPANT':
+      return {
+        ...state,
+        participants: state.participants.filter((p) => p.id !== action.payload),
+      }
+    case 'UPDATE_PARTICIPANT':
+      return {
+        ...state,
+        participants: state.participants.map((p) =>
+          p.id === action.payload.id ? { ...p, ...action.payload.data } : p
+        ),
+      }
+    case 'EVEN_SPLIT':
+      const evenAmount = state.total && state.participants.length > 0 ?
+        Number((Number(state.total) / state.participants.length).toFixed(2)) : ''
+      return {
+        ...state,
+        participants: state.participants.map((p) => ({ ...p, amount: evenAmount }))
+      }
+    case 'RESET':
+      return initialState
+    default:
+      return state
+  }
+}
+
+export default function HomePage() {
+  const [state, dispatch] = useReducer(reducer, initialState)
+  const [result, setResult] = useState<string | null>(null)
+
+  const handleSubmit = async () => {
+    try {
+      const splits = Object.fromEntries(
+        state.participants.map((p) => [p.name, Number(p.amount)])
+      )
+
+      const response = await fetch('https://slush-backend-production-bc16.up.railway.app/validate-split', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ total: Number(state.total), splits }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      setResult(data.message)
+    } catch (error) {
+      console.error('Error:', error)
+      setResult(`Error: ${error instanceof Error ? error.message : 'Failed to connect to server'}`)
+    }
+  }
+
+  const isValid = validateSplitTotal(state.total, state.participants)
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <main className="max-w-xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Manual Bill Splitter</h1>
+
+      <input
+        type="number"
+        placeholder="Enter total amount"
+        value={state.total}
+        onChange={(e) => dispatch({ type: 'SET_TOTAL', payload: Number(e.target.value) })}
+        className="border p-2 mb-4 w-full"
+      />
+
+      {state.participants.map((p) => (
+        <ParticipantRow
+          key={p.id}
+          id={p.id}
+          name={p.name}
+          amount={p.amount}
+          onChange={(data) => dispatch({ type: 'UPDATE_PARTICIPANT', payload: { id: p.id, data } })}
+          onRemove={() => dispatch({ type: 'REMOVE_PARTICIPANT', payload: p.id })}
         />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/pages/index.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+      ))}
+
+      <div className="flex gap-2 my-4">
+        <Button onClick={() => dispatch({ type: 'ADD_PARTICIPANT' })}>Add Participant</Button>
+        <Button onClick={() => dispatch({ type: 'EVEN_SPLIT' })}>Even Split</Button>
+        <Button variant="secondary" onClick={() => dispatch({ type: 'RESET' })}>Reset</Button>
+      </div>
+
+      <div className="my-4">
+        {isValid ? <span className="text-green-600">✅ Split matches total</span> : <span className="text-red-600">❌ Total does not match</span>}
+      </div>
+
+      <Button onClick={handleSubmit} disabled={!isValid}>Submit</Button>
+
+      {result && <p className="mt-4 font-semibold">Result: {result}</p>}
+    </main>
+  )
 }
