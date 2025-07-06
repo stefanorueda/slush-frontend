@@ -85,7 +85,7 @@ export default function HomePage() {
         placeholder="Enter total amount"
         value={state.total}
         onChange={(e) => dispatch({ type: 'SET_TOTAL', payload: Number(e.target.value) })}
-        className="border p-2 mb-4 w-full"
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring mb-4"
       />
 
       {state.participants.map((p) => (
