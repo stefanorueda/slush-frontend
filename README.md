@@ -1,4 +1,4 @@
-# 🧾 Slush Bill Split – Take-Home Project by Stefano Rueda
+# 🧾 Slush Bill Split
 
 ## 🌟 Overview
 This is a take-home project for Slush to build a simple, clean interface for manually splitting a bill between participants. The project includes:
@@ -81,6 +81,12 @@ uvicorn main:app --reload
 - [x] Even Split button
 - [x] Validation for matching total and split
 - [x] Unit tests for backend validation logic
+
+### 🚀 Additional UX Enhancements (Beyond the Task)
+- ✅ Toast notification on submit success/fail
+- ✅ Disabled Submit button when split is invalid
+- ✅ Loading state when validating with backend
+- ✅ Animated transitions when adding/removing participant rows
 
 ---
 
